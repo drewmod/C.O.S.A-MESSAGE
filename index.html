@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to the Family</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #ffebf0; /* Welcoming pastel pink color */
+            transition: background-color 0.5s ease;
+        }
+
+        /* Banner styling */
+        #banner {
+            background-color: #7e8af6;
+            color: white;
+            text-align: center;
+            font-size: 1.5em;
+            padding: 10px;
+            font-weight: bold;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            width: 90%;
+            max-width: 350px; /* Increased width */
+            text-align: center;
+            z-index: 10;
+            color: white;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #ff4500;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ff6347;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            background-color: #ff0000;
+            transform: scale(0.95);
+        }
+
+        #pen-container {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            text-align: center; /* Ensure text is centered */
+            font-size: 4em; /* Larger text size */
+        }
+
+        .typing-word {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid;
+            animation: blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #ffd700; }
+        }
+
+        .move-to-center {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .balloon {
+            position: absolute;
+            bottom: 0;
+            width: 40px;
+            height: 50px;
+            background: linear-gradient(to top, #ff7f7f, #ff0000);
+            border-radius: 50% 50% 50% 50%;
+            animation: flyUp 5s ease-in forwards;
+        }
+
+        .string {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            height: 100px;
+            background: #fff;
+            animation: flyUp 5s ease-in forwards;
+        }
+
+        @keyframes flyUp {
+            from { 
+                transform: translateY(0); /* Start at the bottom */
+            }
+            to { 
+                transform: translateY(-100vh); /* Move up past the viewport */
+            }
+        }
+
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            color: #fff;
+            z-index: 20;
+            display: none; /* Initially hide the countdown */
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            #pen-container {
+                font-size: 3em; /* Adjust the font size for tablets and medium devices */
+            }
+
+            button {
+                font-size: 18px; /* Adjust button size */
+                padding: 12px 25px;
+            }
+
+            #countdown {
+                font-size: 4em; /* Adjust countdown size for medium devices */
+            }
+
+            .card {
+                padding: 20px;
+                width: 90%; /* Make the card occupy most of the screen on medium devices */
+            }
+        }
+
+        @media (max-width: 480px) {
+            #pen-container {
+                font-size: 2em; /* Further reduce font size for mobile devices */
+            }
+
+            button {
+                font-size: 16px; /* Further adjust button size for mobile */
+                padding: 10px 20px;
+            }
+
+            #countdown {
+                font-size: 3em; /* Adjust countdown size for mobile */
+            }
+
+            .card {
+                padding: 15px;
+                width: 100%; /* Full width for mobile devices */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Banner -->
+    <div id="banner">🎉 C.O.S.A 2006 SET UNION 🎉</div>
+
+    <div id="container" class="card">
+        <button onclick="startCountdown()">Click to See Your Welcome Message</button>
+    </div>
+
+    <div id="countdown">5</div>
+    <div id="pen-container"></div>
+
+    <!-- Audio elements -->
+    <audio id="countdownSound" src="./sound/88002__freqman__jjj2-96-countdown-cheer-[AudioTrimmer.com] (22)-[AudioTrimmer.com].mp3"></audio>
+    <audio id="music" src="welcome-music.mp3"></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // Function to get the user's name from the query string
+        function getUserName() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('name') || 'Guest';
+        }
+
+        // Function to start the countdown
+        function startCountdown() {
+            document.getElementById('container').style.display = 'none'; // Hide card after click
+            document.getElementById('countdown').style.display = 'block'; // Show countdown
+            document.body.style.backgroundColor = '#000'; // Change page to dark color
+
+            let countdownElement = document.getElementById('countdown');
+            let countdownValue = 5;
+            let countdownSound = document.getElementById('countdownSound');
+            let music = document.getElementById('music');
+
+            // Play countdown sound
+            countdownSound.play();
+            setTimeout(() => countdownSound.pause(), 16000); // Pause countdown sound after 16 seconds
+
+            // Start the countdown after a slight delay
+            setTimeout(() => {
+                function updateCountdown() {
+                    if (countdownValue > 0) {
+                        countdownElement.textContent = countdownValue;
+                        countdownValue--;
+                    } else {
+                        countdownElement.style.display = 'none'; // Hide countdown
+                        showWelcomeMessage();
+                    }
+                }
+
+                updateCountdown(); // Show initial value
+                setInterval(updateCountdown, 1000); // Update every second
+            }, 200); // 200 milliseconds delay before starting countdown
+
+            // Play welcome music and ensure it plays for 16 seconds
+            music.play();
+            setTimeout(() => music.pause(), 16000); // Pause music after 16 seconds
+        }
+
+        // Function to show the welcome message
+        function showWelcomeMessage() {
+            const userName = getUserName();
+            const penContainer = document.getElementById('pen-container');
+            penContainer.style.display = 'block'; // Show pen writing animation
+
+            // Split message into words
+            const message = `Welcome to the Family!`;
+            const words = message.split(' ');
+
+            let wordIndex = 0;
+            let wordElement = document.createElement('span');
+            penContainer.appendChild(wordElement);
+
+            const colors = ['#ffd700', '#ff69b4', '#00fa9a', '#1e90ff', '#ff4500', '#87ceeb'];
+
+            function typeWord() {
+                if (wordIndex < words.length) {
+                    wordElement.innerHTML = words.slice(0, wordIndex + 1).join(' ') + ' ';
+                    wordElement.style.color = colors[wordIndex % colors.length]; // Cycle through colors
+                    wordIndex++;
+                    setTimeout(typeWord, 2000); // Adjust typing speed
+                } else {
+                    // Add sky blue as the final color
+                    wordElement.style.color = '#87ceeb'; 
+                    document.getElementById('pen-container').classList.add('move-to-center');
+                    displayFireworks();
+                    addBalloonEffect();
+                }
+            }
+
+            typeWord();
+        }
+
+        // Fireworks effect
+        let canvas, ctx, fireworks = [];
+        function displayFireworks() {
+            canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            document.body.appendChild(canvas);
+            ctx = canvas.getContext('2d');
+
+            for (let i = 0; i < 100; i++) {
+                fireworks.push(new Firework());
+            }
+            animateFireworks();
+        }
+
+        class Firework {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 2 - 1; // Slight horizontal drift
+                this.speedY = Math.random() * 3 + 1; // Slower upward speed
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.alpha = 1; // Add alpha for fading effect
+            }
+            update() {
+                this.x += this.speedX;
+                this.y -= this.speedY; // Fireworks move up
+                this.size *= 0.98;
+                this.alpha -= 0.01; // Fade effect
+                if (this.size < 0.1 || this.alpha <= 0) this.size = 0; // Remove when too small
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function animateFireworks() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < fireworks.length; i++) {
+                fireworks[i].update();
+                fireworks[i].draw();
+            }
+            fireworks = fireworks.filter(firework => firework.size > 0); // Keep only visible fireworks
+            requestAnimationFrame(animateFireworks);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Balloon effect
+        function addBalloonEffect() {
+            let balloonInterval = setInterval(() => {
+                let balloonDiv = document.createElement('div');
+                balloonDiv.className = 'balloon';
+                balloonDiv.style.left = `${Math.random() * (window.innerWidth - 40)}px`;
+
+                let stringDiv = document.createElement('div');
+                stringDiv.className = 'string';
+                stringDiv.style.left = `${parseFloat(balloonDiv.style.left) + 18}px`; // Center the string with the balloon
+
+                document.body.appendChild(balloonDiv);
+                document.body.appendChild(stringDiv);
+
+                setTimeout(() => {
+                    // Balloons and strings will already move up due to CSS animation
+                    // Remove them after animation ends
+                    document.body.removeChild(balloonDiv);
+                    document.body.removeChild(stringDiv);
+                }, 5000); // Match this duration to the CSS animation duration
+            }, 500);
+
+            setTimeout(() => clearInterval(balloonInterval), 20000); // Stop balloon effect after 20 seconds
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
